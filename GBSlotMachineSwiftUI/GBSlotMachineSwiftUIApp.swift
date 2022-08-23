@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct GBSlotMachineSwiftUIApp: App {
+struct SwiftUICombineSlotMachineYSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

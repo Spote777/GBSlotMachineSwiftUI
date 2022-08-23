@@ -6,31 +6,61 @@
 //
 
 import XCTest
+import Combine
 @testable import GBSlotMachineSwiftUI
 
 class GBSlotMachineSwiftUITests: XCTestCase {
-
+    var cancellables = Set<AnyCancellable>()
+    var viewModel: SlotViewModel!
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        viewModel = SlotViewModel()
     }
-
+    
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        cancellables = []
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    
+    // Тест изменения текста кнопки в зависимости от состояния вьюмодели
+    func testButtonTextChanged() {
+        // Given
+        let expected = "Крути эту штуку..."
+        let expectation = XCTestExpectation()
+        
+        viewModel
+            .$buttonText
+            .dropFirst() // дропаем первое значение, заданное при инициализации
+            .sink { value in XCTAssertEqual(value, expected); expectation.fulfill() }
+            .store(in: &cancellables)
+        
+        // When
+        viewModel.running = false
+        
+        // Then
+        wait(for: [expectation], timeout: 5)
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    
+    // Тест логики победы, когда выпадает три одинаковых эмодзи подряд
+    func testWin() {
+        // Given
+        let expected = "Поздравляем, ты выиграл!"
+        let expectation = XCTestExpectation()
+        
+        viewModel
+            .$titleText
+            .dropFirst()
+            .sink { value in XCTAssertEqual(value, expected); expectation.fulfill() }
+            .store(in: &cancellables)
+        
+        // When
+        viewModel.slot1Emoji = "🦠"
+        viewModel.slot2Emoji = "🦠"
+        viewModel.slot3Emoji = "🦠"
+        
+        viewModel.running = false
+        viewModel.gameStarted = true
+        
+        // Then
+        wait(for: [expectation], timeout: 1)
     }
-
 }
